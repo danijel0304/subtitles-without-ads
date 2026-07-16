@@ -1,0 +1,113 @@
+name: Build release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Linux packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y desktop-file-utils fuse libfuse2
+
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Download appimagetool
+        run: |
+          mkdir -p tools
+          curl -L "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -o tools/appimagetool-x86_64.AppImage
+          chmod +x tools/appimagetool-x86_64.AppImage
+
+      - name: Build Linux release files
+        run: python3 scripts/build_release.py
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: release/*
+
+  windows:
+    name: Windows EXE
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build EXE
+        run: pyinstaller --clean --noconfirm titlovi_bez_reklama.spec
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $source = Get-Content titlovi_bez_reklama.py -Raw
+          if ($source -match "APP_VERSION\s*=\s*['""]([^'""]+)['""]") {
+            "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+          } else {
+            throw "APP_VERSION not found"
+          }
+
+      - name: Package Windows ZIP
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $package = "titlovi-bez-reklama-$version-windows-x86_64"
+          New-Item -ItemType Directory -Force -Path "release/$package" | Out-Null
+          Copy-Item "dist/Titlovi Bez Reklama.exe" "release/$package/"
+          Copy-Item "OPIS_ZA_FORUM_I_UPUTE.txt" "release/$package/"
+          Copy-Item "README.md" "release/$package/"
+          Compress-Archive -Path "release/$package" -DestinationPath "release/$package.zip" -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: release/*.zip
+
+  github-release:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - linux
+      - windows
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
