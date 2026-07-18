@@ -12,7 +12,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 
-APP_VERSION = '1.1.1'
+APP_VERSION = '1.1.2'
 
 DEFAULT_KEYWORDS = [
     'www.titlovi.com',
