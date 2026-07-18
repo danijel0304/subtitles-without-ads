@@ -12,7 +12,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 
-APP_VERSION = '1.1.2'
+APP_VERSION = '1.1.3'
 
 DEFAULT_KEYWORDS = [
     'www.titlovi.com',
@@ -259,7 +259,7 @@ Značajke:
 • Pregled uklonjenih blokova
 
 Razvio: Danijel
-Godina: 2025
+Godina: 2025-2026
 
 Licenca: Besplatno za osobnu upotrebu
 
@@ -282,7 +282,7 @@ Features:
 • View removed blocks
 
 Developer: Danijel
-Year: 2025
+Year: 2025-2026
 
 License: Free for personal use
 
@@ -646,7 +646,9 @@ development by buying me a coffee.
         ]
         
         for i, (key, label_key, color, callback) in enumerate(stat_items):
-            stats_grid.columnconfigure(i, weight=1, uniform='stats')
+            row = i // 3
+            column = i % 3
+            stats_grid.columnconfigure(column, weight=1, uniform='stats')
             stat_box = tk.Frame(
                 stats_grid,
                 bg=self.colors['surface_alt'],
@@ -655,7 +657,7 @@ development by buying me a coffee.
                 highlightthickness=1,
                 highlightbackground=self.colors['border']
             )
-            stat_box.grid(row=0, column=i, sticky='ew', padx=(0 if i == 0 else 7, 0))
+            stat_box.grid(row=row, column=column, sticky='ew', padx=(0 if column == 0 else 7, 0), pady=(0 if row == 0 else 7, 0))
             stat_box.grid_propagate(False)
             stat_box.columnconfigure(0, weight=1)
             
@@ -673,7 +675,9 @@ development by buying me a coffee.
                 text=self.t(label_key),
                 font=self.fonts['stat_label'],
                 bg=self.colors['surface_alt'],
-                fg=self.colors['muted']
+                fg=self.colors['muted'],
+                justify=tk.CENTER,
+                wraplength=92
             )
             text_lbl.grid(row=1, column=0, sticky='ew')
             
@@ -809,9 +813,10 @@ development by buying me a coffee.
         )
         text_widget.pack(fill=tk.BOTH, expand=True)
         
+        removed_label = "Uklonjeno blokova" if self.language == 'hr' else "Blocks removed"
         for i, file_info in enumerate(self.cleaned_files, 1):
             text_widget.insert(tk.END, f"{i}. {file_info['name']}\n", 'filename')
-            text_widget.insert(tk.END, f"   Uklonjeno blokova: {file_info['removed']}\n\n", 'info')
+            text_widget.insert(tk.END, f"   {removed_label}: {file_info['removed']}\n\n", 'info')
         
         text_widget.tag_config('filename', foreground=self.colors['success'], font=("Consolas", 10, "bold"))
         text_widget.tag_config('info', foreground="#555")
@@ -902,8 +907,9 @@ development by buying me a coffee.
             text_widget.insert(tk.END, f"{filename}\n", 'filename')
             text_widget.insert(tk.END, f"{'='*80}\n\n", 'separator')
             
+            block_label = "Blok" if self.language == 'hr' else "Block"
             for block in blocks:
-                text_widget.insert(tk.END, f"Blok #{block['number']}  |  {block['timestamp']}\n", 'header')
+                text_widget.insert(tk.END, f"{block_label} #{block['number']}  |  {block['timestamp']}\n", 'header')
                 text_widget.insert(tk.END, f"{block['text']}\n\n", 'content')
                 text_widget.insert(tk.END, f"{'-'*80}\n\n", 'separator')
         

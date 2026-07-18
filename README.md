@@ -2,6 +2,30 @@
 
 A small Tkinter tool for automatically cleaning `.srt` subtitle files from ads, translator credits, and promotional text.
 
+## Screenshots
+
+### Main window
+
+![Main window](docs/screenshots/main-window.png)
+
+### Detail views
+
+#### Cleaned files
+
+![Cleaned files](docs/screenshots/cleaned-files.png)
+
+#### Already clean files
+
+![Already clean files](docs/screenshots/already-clean-files.png)
+
+#### Removed blocks
+
+![Removed blocks](docs/screenshots/removed-blocks.png)
+
+#### About
+
+![About dialog](docs/screenshots/about-dialog.png)
+
 ## Run
 
 Linux/macOS:
