@@ -32,7 +32,6 @@ python3 scripts/build_release.py
 
 Skripta izrađuje artefakte u `release/`:
 
-- Windows portable ZIP
 - Linux `.tar.gz`
 - Linux `.deb`
 - Linux AppImage, ako je dostupan `appimagetool`

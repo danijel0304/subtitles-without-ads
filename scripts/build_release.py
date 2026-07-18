@@ -8,7 +8,6 @@ import shutil
 import stat
 import subprocess
 import tarfile
-import zipfile
 from pathlib import Path
 
 
@@ -50,34 +49,6 @@ def build_pyinstaller() -> None:
     run(["pyinstaller", "--clean", "--noconfirm", "titlovi_bez_reklama.spec"])
     if not PYINSTALLER_BINARY.exists():
         raise RuntimeError(f"PyInstaller nije stvorio {PYINSTALLER_BINARY}")
-
-
-def copy_common_files(target: Path, include_linux_runner: bool = False) -> None:
-    target.mkdir(parents=True, exist_ok=True)
-    for filename in [
-        "titlovi_bez_reklama.py",
-        "OPIS_ZA_FORUM_I_UPUTE.txt",
-        "README.md",
-        "pokreni_titlovi_bez_reklama.bat",
-        "build_windows_exe.bat",
-        "titlovi_bez_reklama.spec",
-    ]:
-        shutil.copy2(ROOT / filename, target / filename)
-    if include_linux_runner:
-        shutil.copy2(ROOT / "pokreni_titlovi_bez_reklama.sh", target / "pokreni_titlovi_bez_reklama.sh")
-
-
-def make_windows_zip(version: str) -> Path:
-    package_dir = BUILD_DIR / f"{APP_SLUG}-{version}-windows-portable"
-    if package_dir.exists():
-        shutil.rmtree(package_dir)
-    copy_common_files(package_dir)
-
-    output = RELEASE_DIR / f"{APP_SLUG}-{version}-windows-portable.zip"
-    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for path in sorted(package_dir.rglob("*")):
-            archive.write(path, path.relative_to(package_dir.parent))
-    return output
 
 
 def make_linux_tar(version: str) -> Path:
@@ -243,7 +214,6 @@ def main() -> None:
     build_pyinstaller()
 
     artifacts = [
-        make_windows_zip(version),
         make_linux_tar(version),
         make_deb(version),
     ]

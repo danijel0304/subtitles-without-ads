@@ -76,25 +76,18 @@ jobs:
             throw "APP_VERSION not found"
           }
 
-      - name: Package Windows ZIP
+      - name: Package Windows EXE
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $package = "titlovi-bez-reklama-$version-windows-x86_64"
-          New-Item -ItemType Directory -Force -Path "release/$package" | Out-Null
-          Copy-Item "dist/Titlovi Bez Reklama.exe" "release/$package/"
+          New-Item -ItemType Directory -Force -Path "release" | Out-Null
           Copy-Item "dist/Titlovi Bez Reklama.exe" "release/titlovi-bez-reklama-$version-windows-x86_64.exe"
-          Copy-Item "OPIS_ZA_FORUM_I_UPUTE.txt" "release/$package/"
-          Copy-Item "README.md" "release/$package/"
-          Compress-Archive -Path "release/$package" -DestinationPath "release/$package.zip" -Force
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
-          path: |
-            release/*.zip
-            release/*.exe
+          path: release/*.exe
 
   github-release:
     name: GitHub Release
