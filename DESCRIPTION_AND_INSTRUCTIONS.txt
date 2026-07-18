@@ -1,0 +1,214 @@
+SUBTITLES WITHOUT ADS
+=====================
+
+Short Description
+-----------------
+
+Subtitles Without Ads is a small program for automatically cleaning `.srt`
+subtitle files. It scans a selected folder, finds `.srt` files, and removes
+subtitle blocks that contain ads, translator credits, download links, or
+promotional text.
+
+Examples of text the program can remove:
+
+- www.titlovi.com
+- titlovi.com
+- opensubtitles
+- opensubtitles.org
+- opensubtitles.com
+- podnapisi.net
+- subscene.com
+- addic7ed.com
+- yts.mx
+- yify
+- bsplayer-subtitles.com
+- tvsubtitles.net
+- prijevodi-online.org
+- subtitlovi.com
+- divx-titlovi.com
+- subdl.com
+- subsource.net
+- subtitleseeker
+- opensubtitles.net
+- http://
+- https://
+- www.
+- facebook.com
+- instagram.com
+- twitter.com
+- x.com/
+- t.me/
+- telegram.me
+- discord.gg
+- patreon.com
+- paypal.me
+- ko-fi.com
+- preveo
+- prevela
+- prijevod
+- prevod
+- obrada
+- prijevod i obrada
+- prevod i obrada
+- preveo i obradio
+- sinkronizirao
+- sinkronizirala
+- sinkronizacija
+- translated by
+- translation by
+- translated and synced by
+- subtitle by
+- subtitles by
+- subtitles downloaded from
+- download subtitles from
+- download more subtitles
+- subtitulado por
+- traducido por
+- legendas por
+- sync by
+- synced by
+- resync by
+- resynced by
+- sync and corrections by
+- sync & corrections by
+- corrected and synced by
+- resync and corrections by
+- corrected by
+- edited by
+- adapted by
+- timing by
+- uploaded by
+- encoded by
+- ripped by
+- captioned by
+- downloaded from
+- visit us at
+- like us on facebook
+- follow us on
+- posjetite nas
+- pratite nas
+- zapratite nas
+- podrzite nas
+- hvala sto koristite
+
+After removing blocks, the program renumbers subtitle entries automatically. It
+can also create backup files with the `.srt.bak` suffix before overwriting the
+original subtitles.
+
+Main Features
+-------------
+
+- Graphical interface.
+- Works with `.srt` subtitle files.
+- Scans the selected folder and subfolders.
+- Removes advertising and promotional blocks based on keywords.
+- Lets users edit the keyword list inside the program.
+- Can create backups of original subtitle files.
+- Shows processing statistics.
+- Supports Croatian and English interface text.
+- Runs from Python on Linux, macOS, and Windows.
+- Can be packaged as Windows EXE, Linux binary, DEB, TAR.GZ, and AppImage.
+
+Files In This Folder
+--------------------
+
+subtitles_without_ads.py
+Main Python source file. Run it directly with Python or use it as the source for
+packaged builds.
+
+run_subtitles_without_ads.bat
+Windows script for running the program from source.
+
+run_subtitles_without_ads.sh
+Linux/macOS script for running the program from source.
+
+subtitles_without_ads.spec
+PyInstaller configuration for creating the desktop executable.
+
+build_windows_exe.bat
+Windows build script for creating the `.exe` file.
+
+scripts/build_release.py
+Linux packaging script for creating release artifacts.
+
+packaging/subtitles-without-ads.desktop
+Linux desktop entry used by DEB and AppImage builds.
+
+packaging/subtitles-without-ads.svg
+Application icon used by Linux packages.
+
+Running On Windows
+------------------
+
+1. Install Python for Windows.
+2. During installation, enable "Add Python to PATH".
+3. Double-click:
+
+   run_subtitles_without_ads.bat
+
+Running On Linux
+----------------
+
+1. Open a terminal in the program folder.
+2. Run:
+
+   ./run_subtitles_without_ads.sh
+
+You can also run it directly:
+
+   python3 subtitles_without_ads.py
+
+If Linux reports that Tkinter is missing, install it:
+
+Ubuntu/Debian:
+   sudo apt install python3-tk
+
+Fedora:
+   sudo dnf install python3-tkinter
+
+Arch:
+   sudo pacman -S tk
+
+Using The Program
+-----------------
+
+1. Start the program.
+2. Click "Browse folder".
+3. Select the folder that contains `.srt` subtitle files.
+4. Review or edit the keyword list if needed.
+5. Keep backups enabled if you want to preserve originals.
+6. Click "Start cleaning".
+7. After processing, check the statistics and processing log.
+
+If backups are enabled, the original file remains saved as:
+
+   movie.srt.bak
+
+and the cleaned version remains as:
+
+   movie.srt
+
+Building The Windows EXE
+------------------------
+
+Use this only on Windows.
+
+1. Install Python for Windows.
+2. During installation, enable "Add Python to PATH".
+3. Open the program folder.
+4. Run:
+
+   build_windows_exe.bat
+
+The script checks whether PyInstaller is installed. If PyInstaller is missing,
+it tries to install it automatically.
+
+After a successful build, the finished file is:
+
+   dist\Subtitles Without Ads.exe
+
+Note
+----
+
+Before processing many files, test the program on copies of a few subtitles.
+Keep keywords specific enough so the program does not remove normal dialogue.

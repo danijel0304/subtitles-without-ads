@@ -1,28 +1,28 @@
-# Titlovi Bez Reklama
+# Subtitles Without Ads
 
-Mali Tkinter alat za automatsko čišćenje `.srt` titlova od reklama, potpisa prevoditelja i promotivnog teksta.
+A small Tkinter tool for automatically cleaning `.srt` subtitle files from ads, translator credits, and promotional text.
 
-## Pokretanje
+## Run
 
 Linux/macOS:
 
 ```sh
-./pokreni_titlovi_bez_reklama.sh
+./run_subtitles_without_ads.sh
 ```
 
 Windows:
 
 ```bat
-pokreni_titlovi_bez_reklama.bat
+run_subtitles_without_ads.bat
 ```
 
-Direktno s Pythonom:
+Directly with Python:
 
 ```sh
-python3 titlovi_bez_reklama.py
+python3 subtitles_without_ads.py
 ```
 
-## Izrada paketa
+## Build Packages
 
 Linux build:
 
@@ -30,18 +30,18 @@ Linux build:
 python3 scripts/build_release.py
 ```
 
-Skripta izrađuje artefakte u `release/`:
+The script creates artifacts in `release/`:
 
 - Linux `.tar.gz`
 - Linux `.deb`
-- Linux AppImage, ako je dostupan `appimagetool`
+- Linux AppImage, if `appimagetool` is available
 
-Windows `.exe` se gradi na Windowsu:
+Windows `.exe` builds on Windows:
 
 ```bat
 build_windows_exe.bat
 ```
 
-## Napomena
+## Note
 
-Prije masovne obrade testiraj program na kopiji nekoliko titlova. Ključne riječi su namjerno precizne kako se ne bi uklanjali normalni dijelovi dijaloga.
+Before processing a large subtitle collection, test the program on copies of a few subtitle files. The default keywords are intentionally specific so normal dialogue is not removed by accident.

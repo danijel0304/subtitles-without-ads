@@ -5,7 +5,7 @@ setlocal
 cd /d "%~dp0"
 
 echo.
-echo Building Titlovi Bez Reklama.exe
+echo Building Subtitles Without Ads.exe
 echo.
 
 py --version >nul 2>&1
@@ -26,7 +26,7 @@ if errorlevel 1 (
     )
 )
 
-py -m PyInstaller --clean --noconfirm titlovi_bez_reklama.spec
+py -m PyInstaller --clean --noconfirm subtitles_without_ads.spec
 if errorlevel 1 (
     echo Build nije uspio.
     pause
@@ -35,6 +35,6 @@ if errorlevel 1 (
 
 echo.
 echo Gotovo. EXE je u folderu: dist
-echo Datoteka: dist\Titlovi Bez Reklama.exe
+echo File: dist\Subtitles Without Ads.exe
 echo.
 pause

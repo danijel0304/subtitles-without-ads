@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Titlovi Bez Reklama
+Name=Subtitles Without Ads
 Comment=Clean SRT subtitles from ads and promotional text
-Exec=titlovi-bez-reklama
-Icon=titlovi-bez-reklama
+Exec=subtitles-without-ads
+Icon=subtitles-without-ads
 Terminal=false
-Categories=Utility;AudioVideo;
+Categories=Utility;

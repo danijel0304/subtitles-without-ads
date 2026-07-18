@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['titlovi_bez_reklama.py'],
+    ['subtitles_without_ads.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Titlovi Bez Reklama',
+    name='Subtitles Without Ads',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -104,7 +104,7 @@ class SRTCleanerApp:
         self._main_thread = threading.current_thread()
         self._ui_queue = queue.Queue()
         self.language = 'hr'  # Default language
-        self.root.title(f"Titlovi Bez Reklama - Verzija {APP_VERSION}")
+        self.root.title(f"Subtitles Without Ads - Verzija {APP_VERSION}")
         self.root.geometry("950x800")
         self.root.resizable(True, True)
         
@@ -133,8 +133,8 @@ class SRTCleanerApp:
         # Translations
         self.translations = {
             'hr': {
-                'title': f'Titlovi Bez Reklama - Verzija {APP_VERSION}',
-                'header': 'Titlovi Bez Reklama',
+                'title': f'Subtitles Without Ads - Verzija {APP_VERSION}',
+                'header': 'Subtitles Without Ads',
                 'subtitle': 'Čišćenje SRT titlova od reklama, potpisa i promotivnog teksta',
                 'folder_selection': 'Odabir foldera',
                 'no_folder': 'Nije odabran folder',
@@ -153,7 +153,7 @@ class SRTCleanerApp:
                 'start': 'Pokreni čišćenje',
                 'clear_log': 'Očisti dnevnik',
                 'status_ready': 'Spremno. Odaberi folder za početak.',
-                'welcome': 'Titlovi Bez Reklama je spreman.',
+                'welcome': 'Subtitles Without Ads je spreman.',
                 'select_folder': 'Odaberite folder s .srt datotekama za početak.',
                 'buy_coffee': 'Plati kavu',
                 'language': 'English',

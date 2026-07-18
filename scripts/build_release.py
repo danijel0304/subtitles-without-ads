@@ -12,8 +12,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-APP_NAME = "Titlovi Bez Reklama"
-APP_SLUG = "titlovi-bez-reklama"
+APP_NAME = "Subtitles Without Ads"
+APP_SLUG = "subtitles-without-ads"
 PYINSTALLER_BINARY = ROOT / "dist" / APP_NAME
 RELEASE_DIR = ROOT / "release"
 BUILD_DIR = ROOT / "build" / "release"
@@ -26,10 +26,10 @@ def run(command: list[str], cwd: Path = ROOT, env: dict[str, str] | None = None)
 
 
 def read_version() -> str:
-    source = (ROOT / "titlovi_bez_reklama.py").read_text(encoding="utf-8")
+    source = (ROOT / "subtitles_without_ads.py").read_text(encoding="utf-8")
     match = re.search(r"APP_VERSION\s*=\s*['\"]([^'\"]+)['\"]", source)
     if not match:
-        raise RuntimeError("APP_VERSION nije pronadjen u titlovi_bez_reklama.py")
+        raise RuntimeError("APP_VERSION was not found in subtitles_without_ads.py")
     return match.group(1)
 
 
@@ -46,9 +46,9 @@ def clean() -> None:
 
 
 def build_pyinstaller() -> None:
-    run(["pyinstaller", "--clean", "--noconfirm", "titlovi_bez_reklama.spec"])
+    run(["pyinstaller", "--clean", "--noconfirm", "subtitles_without_ads.spec"])
     if not PYINSTALLER_BINARY.exists():
-        raise RuntimeError(f"PyInstaller nije stvorio {PYINSTALLER_BINARY}")
+        raise RuntimeError(f"PyInstaller did not create {PYINSTALLER_BINARY}")
 
 
 def make_linux_tar(version: str) -> Path:
@@ -58,12 +58,12 @@ def make_linux_tar(version: str) -> Path:
     package_dir.mkdir(parents=True)
     shutil.copy2(PYINSTALLER_BINARY, package_dir / APP_SLUG)
     os.chmod(package_dir / APP_SLUG, 0o755)
-    shutil.copy2(ROOT / "OPIS_ZA_FORUM_I_UPUTE.txt", package_dir / "OPIS_ZA_FORUM_I_UPUTE.txt")
+    shutil.copy2(ROOT / "DESCRIPTION_AND_INSTRUCTIONS.txt", package_dir / "DESCRIPTION_AND_INSTRUCTIONS.txt")
     shutil.copy2(ROOT / "README.md", package_dir / "README.md")
 
-    run_script = package_dir / "pokreni.sh"
+    run_script = package_dir / "run.sh"
     run_script.write_text(
-        '#!/usr/bin/env sh\nDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexec "$DIR/titlovi-bez-reklama" "$@"\n',
+        '#!/usr/bin/env sh\nDIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexec "$DIR/subtitles-without-ads" "$@"\n',
         encoding="utf-8",
     )
     os.chmod(run_script, 0o755)
@@ -100,10 +100,10 @@ def make_deb(version: str) -> Path:
     desktop = (ROOT / "packaging" / f"{APP_SLUG}.desktop").read_bytes()
     icon = (ROOT / "packaging" / f"{APP_SLUG}.svg").read_bytes()
     binary = PYINSTALLER_BINARY.read_bytes()
-    readme = (ROOT / "OPIS_ZA_FORUM_I_UPUTE.txt").read_bytes()
+    readme = (ROOT / "DESCRIPTION_AND_INSTRUCTIONS.txt").read_bytes()
     wrapper = f'#!/usr/bin/env sh\nexec "/opt/{APP_SLUG}/{APP_NAME}" "$@"\n'.encode("utf-8")
     copyright_text = (
-        "Titlovi Bez Reklama\n"
+        "Subtitles Without Ads\n"
         "Author: Danijel\n"
         "License: Free for personal use. See application notes for details.\n"
     ).encode("utf-8")
@@ -117,14 +117,14 @@ def make_deb(version: str) -> Path:
         "Maintainer: Danijel <danijel0304@users.noreply.github.com>\n"
         "Depends: libc6\n"
         "Description: Clean SRT subtitles from ads and promotional text\n"
-        " Titlovi Bez Reklama is a small GUI tool for cleaning subtitle files.\n"
+        " Subtitles Without Ads is a small GUI tool for cleaning subtitle files.\n"
     ).encode("utf-8")
 
     control_tar = tar_bytes({"./control": (control, 0o644)})
     data_tar = tar_bytes(
         {
             f"./opt/{APP_SLUG}/{APP_NAME}": (binary, 0o755),
-            f"./opt/{APP_SLUG}/OPIS_ZA_FORUM_I_UPUTE.txt": (readme, 0o644),
+            f"./opt/{APP_SLUG}/DESCRIPTION_AND_INSTRUCTIONS.txt": (readme, 0o644),
             f"./usr/bin/{APP_SLUG}": (wrapper, 0o755),
             f"./usr/share/applications/{APP_SLUG}.desktop": (desktop, 0o644),
             f"./usr/share/icons/hicolor/scalable/apps/{APP_SLUG}.svg": (icon, 0o644),
@@ -156,7 +156,7 @@ def make_appdir() -> None:
 
     app_run = APPDIR / "AppRun"
     app_run.write_text(
-        '#!/usr/bin/env sh\nHERE=$(dirname "$(readlink -f "$0")")\nexec "$HERE/usr/bin/titlovi-bez-reklama" "$@"\n',
+        '#!/usr/bin/env sh\nHERE=$(dirname "$(readlink -f "$0")")\nexec "$HERE/usr/bin/subtitles-without-ads" "$@"\n',
         encoding="utf-8",
     )
     os.chmod(app_run, 0o755)
@@ -189,7 +189,7 @@ def make_appimage(version: str) -> Path | None:
     make_appdir()
     tool = find_appimagetool()
     if tool is None:
-        print("AppImage preskocen: appimagetool nije pronadjen.")
+        print("AppImage skipped: appimagetool was not found.")
         return None
 
     output = RELEASE_DIR / f"{APP_SLUG}-{version}-x86_64.AppImage"
@@ -202,7 +202,7 @@ def make_appimage(version: str) -> Path | None:
 
 
 def validate() -> None:
-    run(["python3", "-B", "-c", "import py_compile; py_compile.compile('titlovi_bez_reklama.py', cfile='/tmp/titlovi_bez_reklama.pyc', doraise=True)"])
+    run(["python3", "-B", "-c", "import py_compile; py_compile.compile('subtitles_without_ads.py', cfile='/tmp/subtitles_without_ads.pyc', doraise=True)"])
     if shutil.which("desktop-file-validate"):
         run(["desktop-file-validate", str(ROOT / "packaging" / f"{APP_SLUG}.desktop")])
 
@@ -221,7 +221,7 @@ def main() -> None:
     if appimage:
         artifacts.append(appimage)
 
-    print("\nArtefakti:")
+    print("\nArtifacts:")
     for artifact in artifacts:
         print(f"- {artifact.relative_to(ROOT)}")
 
