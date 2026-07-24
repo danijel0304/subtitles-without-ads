@@ -3,16 +3,23 @@
 
 import os
 import queue
+import json
 import re
 import shutil
 import tempfile
 import threading
+import urllib.error
+import urllib.request
 import webbrowser
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 
-APP_VERSION = '1.1.3'
+APP_VERSION = '1.1.4'
+GITHUB_REPO = "danijel0304/subtitles-without-ads"
+GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
+PAYPAL_DONATE_URL = "https://www.paypal.com/paypalme/danijel0304"
 
 DEFAULT_KEYWORDS = [
     'www.titlovi.com',
@@ -104,6 +111,7 @@ class SRTCleanerApp:
         self._main_thread = threading.current_thread()
         self._ui_queue = queue.Queue()
         self.language = 'hr'  # Default language
+        self.update_check_running = False
         self.root.title(f"Subtitles Without Ads - Verzija {APP_VERSION}")
         self.root.geometry("950x800")
         self.root.resizable(True, True)
@@ -136,6 +144,7 @@ class SRTCleanerApp:
                 'title': f'Subtitles Without Ads - Verzija {APP_VERSION}',
                 'header': 'Subtitles Without Ads',
                 'subtitle': 'Čišćenje SRT titlova od reklama, potpisa i promotivnog teksta',
+                'version_label': 'Verzija',
                 'folder_selection': 'Odabir foldera',
                 'no_folder': 'Nije odabran folder',
                 'browse': 'Odaberi folder',
@@ -156,6 +165,16 @@ class SRTCleanerApp:
                 'welcome': 'Subtitles Without Ads je spreman.',
                 'select_folder': 'Odaberite folder s .srt datotekama za početak.',
                 'buy_coffee': 'Plati kavu',
+                'check_updates': 'Update',
+                'checking_updates': 'Provjeravam update...',
+                'update_available_title': 'Dostupna je nova verzija',
+                'update_available_msg': 'Dostupna je nova verzija programa Subtitles Without Ads.\n\nTrenutna verzija: {current}\nNova verzija: {latest}\n\nOtvoriti stranicu za preuzimanje?',
+                'update_current_title': 'Program je ažuran',
+                'update_current_msg': 'Koristite najnoviju verziju programa ({current}).',
+                'update_failed_title': 'Provjera nije uspjela',
+                'update_failed_msg': 'Nisam uspio provjeriti novu verziju. Provjerite internet vezu i pokušajte ponovno.',
+                'update_in_progress_title': 'Provjera je u tijeku',
+                'update_in_progress_msg': 'Provjera nove verzije već je pokrenuta.',
                 'language': 'English',
                 'backup_option': 'Kreiraj backup datoteke',
                 'view_cleaned': 'Prikaži očišćene',
@@ -167,6 +186,7 @@ class SRTCleanerApp:
                 'title': f'Subtitles Without Ads - Version {APP_VERSION}',
                 'header': 'Subtitles Without Ads',
                 'subtitle': 'Clean SRT subtitles from ads, credits and promotional text',
+                'version_label': 'Version',
                 'folder_selection': 'Folder selection',
                 'no_folder': 'No folder selected',
                 'browse': 'Browse folder',
@@ -187,6 +207,16 @@ class SRTCleanerApp:
                 'welcome': 'Subtitles Without Ads is ready.',
                 'select_folder': 'Select a folder with .srt files to begin.',
                 'buy_coffee': 'Buy me a coffee',
+                'check_updates': 'Update',
+                'checking_updates': 'Checking updates...',
+                'update_available_title': 'Update available',
+                'update_available_msg': 'A new Subtitles Without Ads version is available.\n\nCurrent version: {current}\nNew version: {latest}\n\nOpen the download page?',
+                'update_current_title': 'Up to date',
+                'update_current_msg': 'You are using the latest version ({current}).',
+                'update_failed_title': 'Update check failed',
+                'update_failed_msg': 'I could not check for a new version. Check the internet connection and try again.',
+                'update_in_progress_title': 'Check in progress',
+                'update_in_progress_msg': 'The update check is already running.',
                 'language': 'Hrvatski',
                 'backup_option': 'Create backup files',
                 'view_cleaned': 'View cleaned',
@@ -327,7 +357,7 @@ development by buying me a coffee.
         btn_coffee = self.make_button(
             btn_frame,
             coffee_text,
-            lambda: webbrowser.open('https://www.paypal.com/paypalme/danijel0304'),
+            lambda: webbrowser.open(PAYPAL_DONATE_URL),
             'coffee',
             14,
             8
@@ -342,7 +372,7 @@ development by buying me a coffee.
         """Refresh all UI text elements"""
         self.root.title(self.t('title'))
         self.header_title.config(text=self.t('header'))
-        self.header_subtitle.config(text=self.t('subtitle'))
+        self.header_subtitle.config(text=f"{self.t('version_label')} {APP_VERSION} | {self.t('subtitle')}")
         self.folder_frame.config(text=self.t('folder_selection'))
         if not self.selected_folder:
             self.folder_label.config(text=self.t('no_folder'))
@@ -355,6 +385,7 @@ development by buying me a coffee.
         self.log_frame.config(text=self.t('log'))
         self.btn_start.config(text=self.t('start'))
         self.btn_clear.config(text=self.t('clear_log'))
+        self.btn_update.config(text=self.t('check_updates'))
         self.btn_coffee.config(text=self.t('buy_coffee'))
         self.btn_language.config(text=self.t('language'))
         self.btn_about.config(text=self.t('about'))
@@ -367,9 +398,67 @@ development by buying me a coffee.
         stat_keys = ['total_files', 'cleaned', 'already_clean', 'blocks_removed', 'errors']
         for i, key in enumerate(['total', 'cleaned', 'already_clean', 'blocks_removed', 'errors']):
             self.stat_text_labels[key].config(text=self.t(stat_keys[i]))
-        
+
         if not self.is_processing:
             self.status_bar.config(text=self.t('status_ready'))
+
+    def version_tuple(self, value):
+        parts = [int(part) for part in re.findall(r"\d+", str(value).lstrip("v"))[:3]]
+        while len(parts) < 3:
+            parts.append(0)
+        return tuple(parts)
+
+    def is_newer_version(self, latest, current):
+        return self.version_tuple(latest) > self.version_tuple(current)
+
+    def check_for_updates(self):
+        if self.update_check_running:
+            messagebox.showinfo(self.t('update_in_progress_title'), self.t('update_in_progress_msg'))
+            return
+        self.update_check_running = True
+        self.btn_update.config(state=tk.DISABLED)
+        self.status_bar.config(text=self.t('checking_updates'))
+        threading.Thread(target=self.update_worker, daemon=True).start()
+
+    def update_worker(self):
+        release = None
+        error = None
+        try:
+            request = urllib.request.Request(
+                GITHUB_RELEASES_API,
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": f"Subtitles-Without-Ads/{APP_VERSION}",
+                },
+            )
+            with urllib.request.urlopen(request, timeout=8) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            if not data.get("draft") and not data.get("prerelease"):
+                release = {
+                    "tag": str(data.get("tag_name", "")).strip(),
+                    "url": data.get("html_url") or GITHUB_RELEASES_URL,
+                }
+        except (OSError, TimeoutError, urllib.error.URLError, ValueError) as exc:
+            error = exc
+
+        self.run_on_ui_thread(self.handle_update_result, release, error)
+
+    def handle_update_result(self, release, error):
+        self.update_check_running = False
+        self.btn_update.config(state=tk.NORMAL)
+        self.status_bar.config(text=self.t('status_ready'))
+        if error or not release or not release.get("tag"):
+            messagebox.showwarning(self.t('update_failed_title'), self.t('update_failed_msg'))
+            return
+
+        latest = release["tag"]
+        if not self.is_newer_version(latest, APP_VERSION):
+            messagebox.showinfo(self.t('update_current_title'), self.t('update_current_msg').format(current=APP_VERSION))
+            return
+
+        message = self.t('update_available_msg').format(current=APP_VERSION, latest=latest)
+        if messagebox.askyesno(self.t('update_available_title'), message):
+            webbrowser.open(release["url"], new=2)
     
     def configure_theme(self):
         style = ttk.Style()
@@ -510,7 +599,7 @@ development by buying me a coffee.
         
         self.header_subtitle = tk.Label(
             title_frame,
-            text=self.t('subtitle'),
+            text=f"{self.t('version_label')} {APP_VERSION} | {self.t('subtitle')}",
             font=self.fonts['subtitle'],
             bg=self.colors['surface'],
             fg=self.colors['muted'],
@@ -525,10 +614,19 @@ development by buying me a coffee.
         self.btn_language.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_about = self.make_button(header_buttons, self.t('about'), self.show_about, 'secondary', 12, 7)
         self.btn_about.pack(side=tk.LEFT, padx=(0, 8))
+        self.btn_update = self.make_button(
+            header_buttons,
+            self.t('check_updates'),
+            self.check_for_updates,
+            'secondary',
+            12,
+            7
+        )
+        self.btn_update.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_coffee = self.make_button(
             header_buttons,
             self.t('buy_coffee'),
-            lambda: webbrowser.open('https://www.paypal.com/paypalme/danijel0304'),
+            lambda: webbrowser.open(PAYPAL_DONATE_URL),
             'coffee',
             12,
             7
