@@ -15,7 +15,9 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 
-APP_VERSION = '1.1.4'
+from self_updater import SelfUpdater
+
+APP_VERSION = '1.1.5'
 GITHUB_REPO = "danijel0304/subtitles-without-ads"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
@@ -412,53 +414,17 @@ development by buying me a coffee.
         return self.version_tuple(latest) > self.version_tuple(current)
 
     def check_for_updates(self):
-        if self.update_check_running:
-            messagebox.showinfo(self.t('update_in_progress_title'), self.t('update_in_progress_msg'))
-            return
-        self.update_check_running = True
-        self.btn_update.config(state=tk.DISABLED)
-        self.status_bar.config(text=self.t('checking_updates'))
-        threading.Thread(target=self.update_worker, daemon=True).start()
-
-    def update_worker(self):
-        release = None
-        error = None
-        try:
-            request = urllib.request.Request(
-                GITHUB_RELEASES_API,
-                headers={
-                    "Accept": "application/vnd.github+json",
-                    "User-Agent": f"Subtitles-Without-Ads/{APP_VERSION}",
-                },
-            )
-            with urllib.request.urlopen(request, timeout=8) as response:
-                data = json.loads(response.read().decode("utf-8"))
-            if not data.get("draft") and not data.get("prerelease"):
-                release = {
-                    "tag": str(data.get("tag_name", "")).strip(),
-                    "url": data.get("html_url") or GITHUB_RELEASES_URL,
-                }
-        except (OSError, TimeoutError, urllib.error.URLError, ValueError) as exc:
-            error = exc
-
-        self.run_on_ui_thread(self.handle_update_result, release, error)
-
-    def handle_update_result(self, release, error):
-        self.update_check_running = False
-        self.btn_update.config(state=tk.NORMAL)
-        self.status_bar.config(text=self.t('status_ready'))
-        if error or not release or not release.get("tag"):
-            messagebox.showwarning(self.t('update_failed_title'), self.t('update_failed_msg'))
-            return
-
-        latest = release["tag"]
-        if not self.is_newer_version(latest, APP_VERSION):
-            messagebox.showinfo(self.t('update_current_title'), self.t('update_current_msg').format(current=APP_VERSION))
-            return
-
-        message = self.t('update_available_msg').format(current=APP_VERSION, latest=latest)
-        if messagebox.askyesno(self.t('update_available_title'), message):
-            webbrowser.open(release["url"], new=2)
+        SelfUpdater(
+            self.root,
+            "Subtitles Without Ads",
+            APP_VERSION,
+            GITHUB_REPO,
+            binary_names=("Subtitles Without Ads.exe", "Subtitles Without Ads", "subtitles-without-ads"),
+            linux_command="subtitles-without-ads",
+            status_callback=lambda message: self.status_bar.config(text=message),
+            button_getter=lambda: self.btn_update,
+            language_getter=lambda: self.language,
+        ).check()
     
     def configure_theme(self):
         style = ttk.Style()
