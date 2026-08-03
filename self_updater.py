@@ -126,12 +126,14 @@ class SelfUpdater:
         self.running = False
         self._set_button_enabled(True)
         if error is not None or not release or not release.get("tag"):
+            self._set_status(self._msg("failed"))
             if show_errors:
                 messagebox.showwarning(self._msg("failed_title"), self._msg("failed"))
             return
 
         latest = str(release["tag"])
         if not self.is_newer_version(latest, self.app_version):
+            self._set_status(self._msg("current").format(current=self.app_version))
             if show_current:
                 messagebox.showinfo(self._msg("current_title"), self._msg("current").format(current=self.app_version))
             return

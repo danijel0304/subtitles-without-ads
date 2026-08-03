@@ -17,7 +17,7 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 
 from self_updater import SelfUpdater
 
-APP_VERSION = '1.1.5'
+APP_VERSION = '1.1.7'
 GITHUB_REPO = "danijel0304/subtitles-without-ads"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
@@ -230,6 +230,7 @@ class SRTCleanerApp:
         
         self._build_ui()
         self.root.after(50, self.process_ui_queue)
+        self.root.after(1200, lambda: self.check_for_updates(silent=True))
         
     def is_ui_thread(self):
         return threading.current_thread() is self._main_thread
@@ -413,7 +414,7 @@ development by buying me a coffee.
     def is_newer_version(self, latest, current):
         return self.version_tuple(latest) > self.version_tuple(current)
 
-    def check_for_updates(self):
+    def check_for_updates(self, *, silent=False):
         SelfUpdater(
             self.root,
             "Subtitles Without Ads",
@@ -424,7 +425,7 @@ development by buying me a coffee.
             status_callback=lambda message: self.status_bar.config(text=message),
             button_getter=lambda: self.btn_update,
             language_getter=lambda: self.language,
-        ).check()
+        ).check(show_current=not silent, show_errors=not silent)
     
     def configure_theme(self):
         style = ttk.Style()
