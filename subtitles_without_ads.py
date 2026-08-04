@@ -18,7 +18,7 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 
 from self_updater import SelfUpdater
 
-APP_VERSION = '1.1.8'
+APP_VERSION = '1.1.9'
 GITHUB_REPO = "danijel0304/subtitles-without-ads"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
