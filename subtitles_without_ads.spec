@@ -5,7 +5,10 @@ a = Analysis(
     ['subtitles_without_ads.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('packaging/subtitles-without-ads.ico', 'packaging'),
+        ('packaging/subtitles-without-ads.png', 'packaging'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

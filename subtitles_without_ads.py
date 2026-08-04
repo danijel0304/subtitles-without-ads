@@ -6,6 +6,7 @@ import queue
 import json
 import re
 import shutil
+import sys
 import tempfile
 import threading
 import urllib.error
@@ -22,6 +23,43 @@ GITHUB_REPO = "danijel0304/subtitles-without-ads"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
 PAYPAL_DONATE_URL = "https://www.paypal.com/paypalme/danijel0304"
+
+
+def set_window_icon(window: tk.Tk) -> None:
+    source_dir = Path(__file__).resolve().parent
+    resource_dir = Path(getattr(sys, "_MEIPASS", source_dir))
+    packaging_dir = resource_dir / "packaging"
+    try:
+        image = tk.PhotoImage(file=str(packaging_dir / "subtitles-without-ads.png"))
+        window.iconphoto(True, image)
+        window._window_icon_image = image
+    except tk.TclError:
+        pass
+    if os.name == "nt":
+        try:
+            window.iconbitmap(default=str(packaging_dir / "subtitles-without-ads.ico"))
+        except tk.TclError:
+            pass
+
+
+class StartupSplash(tk.Tk):
+    def __init__(self) -> None:
+        super().__init__()
+        self.configure(bg="#101827")
+        self.overrideredirect(True)
+        set_window_icon(self)
+        card = tk.Frame(self, bg="#162033", highlightbackground="#31415b", highlightthickness=1)
+        card.pack(fill=tk.BOTH, expand=True)
+        packaging_dir = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "packaging"
+        image = tk.PhotoImage(file=str(packaging_dir / "subtitles-without-ads.png"))
+        self._image = image.subsample(2, 2)
+        tk.Label(card, image=self._image, bg="#162033").pack(padx=28, pady=(24, 8))
+        tk.Label(card, text="Titlovi bez reklama", bg="#162033", fg="#f8fafc", font=("Segoe UI", 18, "bold")).pack()
+        tk.Label(card, text="Pokrećem aplikaciju…", bg="#162033", fg="#b5c3d7", font=("Segoe UI", 10)).pack(pady=(6, 22))
+        self.update_idletasks()
+        width, height = self.winfo_reqwidth(), self.winfo_reqheight()
+        self.geometry(f"{width}x{height}+{(self.winfo_screenwidth() - width) // 2}+{(self.winfo_screenheight() - height) // 2}")
+        self.after(3000, self.destroy)
 
 DEFAULT_KEYWORDS = [
     'www.titlovi.com',
@@ -113,6 +151,7 @@ class SRTCleanerApp:
         self._main_thread = threading.current_thread()
         self._ui_queue = queue.Queue()
         self.language = 'hr'  # Default language
+        self.dark_mode = False
         self.update_check_running = False
         self.root.title(f"Subtitles Without Ads - Verzija {APP_VERSION}")
         self.root.geometry("950x800")
@@ -342,7 +381,7 @@ development by buying me a coffee.
             container,
             font=self.fonts['body'],
             wrap=tk.WORD,
-            bg='#fbfdff',
+            bg=self.colors['surface_alt'],
             fg=self.colors['text'],
             relief=tk.FLAT,
             bd=0,
@@ -502,7 +541,7 @@ development by buying me a coffee.
         self.root.geometry("1120x760")
         self.root.minsize(980, 680)
         
-        self.colors = {
+        light_colors = {
             'background': '#f5f7fb',
             'surface': '#ffffff',
             'surface_alt': '#eef3f8',
@@ -524,6 +563,15 @@ development by buying me a coffee.
             'log_bg': '#111827',
             'log_fg': '#e5e7eb'
         }
+        dark_colors = {
+            'background': '#0b1020', 'surface': '#111827', 'surface_alt': '#172033',
+            'border': '#263247', 'text': '#e5e7eb', 'muted': '#94a3b8', 'disabled': '#64748b',
+            'primary': '#38bdf8', 'primary_hover': '#0ea5e9', 'success': '#22c55e',
+            'success_hover': '#16a34a', 'warning': '#f59e0b', 'danger': '#ef4444',
+            'dark': '#e5e7eb', 'light': '#172033', 'coffee': '#003087', 'coffee_hover': '#0070ba',
+            'muted_button': '#1d293d', 'log_bg': '#070c16', 'log_fg': '#e5e7eb'
+        }
+        self.colors = dark_colors if self.dark_mode else light_colors
         self.fonts = {
             'title': ('Segoe UI', 22, 'bold'),
             'subtitle': ('Segoe UI', 10),
@@ -579,6 +627,15 @@ development by buying me a coffee.
         
         self.btn_language = self.make_button(header_buttons, self.t('language'), self.toggle_language, 'secondary', 12, 7)
         self.btn_language.pack(side=tk.LEFT, padx=(0, 8))
+        self.btn_theme = self.make_button(
+            header_buttons,
+            'Svijetla tema' if self.dark_mode else 'Tamna tema',
+            self.toggle_theme,
+            'secondary',
+            12,
+            7,
+        )
+        self.btn_theme.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_about = self.make_button(header_buttons, self.t('about'), self.show_about, 'secondary', 12, 7)
         self.btn_about.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_update = self.make_button(
@@ -599,7 +656,7 @@ development by buying me a coffee.
             7
         )
         self.btn_coffee.pack(side=tk.LEFT)
-        
+
         # Main content
         main_frame = tk.Frame(self.root, bg=self.colors['background'], padx=18, pady=18)
         main_frame.pack(fill=tk.BOTH, expand=True)
@@ -666,7 +723,7 @@ development by buying me a coffee.
             height=14,
             font=self.fonts['mono'],
             wrap=tk.WORD,
-            bg='#fbfdff',
+            bg=self.colors['surface_alt'],
             fg=self.colors['text'],
             insertbackground=self.colors['text'],
             relief=tk.FLAT,
@@ -834,6 +891,15 @@ development by buying me a coffee.
         self.log(self.t('welcome'), 'info')
         self.log(self.t('select_folder'), 'info')
     
+    def toggle_theme(self):
+        if self.is_processing:
+            return
+        self.dark_mode = not self.dark_mode
+        for child in self.root.winfo_children():
+            child.destroy()
+        self._build_ui()
+        self.refresh_ui()
+
     def toggle_backup(self):
         self.create_backups = self.backup_var.get()
         msg = "Backup datoteke će biti kreirane" if self.create_backups else "Backup datoteke neće biti kreirane"
@@ -869,7 +935,7 @@ development by buying me a coffee.
             frame,
             font=("Consolas", 10),
             wrap=tk.WORD,
-            bg='#fbfdff',
+            bg=self.colors['surface_alt'],
             fg=self.colors['text'],
             relief=tk.FLAT,
             bd=0,
@@ -915,7 +981,7 @@ development by buying me a coffee.
             frame,
             font=("Consolas", 10),
             wrap=tk.WORD,
-            bg='#fbfdff',
+            bg=self.colors['surface_alt'],
             fg=self.colors['text'],
             relief=tk.FLAT,
             bd=0,
@@ -958,7 +1024,7 @@ development by buying me a coffee.
             frame,
             font=("Consolas", 9),
             wrap=tk.WORD,
-            bg='#fbfdff',
+            bg=self.colors['surface_alt'],
             fg=self.colors['text'],
             relief=tk.FLAT,
             bd=0,
@@ -1386,7 +1452,10 @@ development by buying me a coffee.
 
 
 def main():
+    splash = StartupSplash()
+    splash.mainloop()
     root = tk.Tk()
+    set_window_icon(root)
     app = SRTCleanerApp(root)
     root.mainloop()
 
