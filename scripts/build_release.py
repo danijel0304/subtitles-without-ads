@@ -98,7 +98,7 @@ def make_deb(version: str) -> Path:
     deb_work.mkdir(parents=True)
 
     desktop = (ROOT / "packaging" / f"{APP_SLUG}.desktop").read_bytes()
-    icon = (ROOT / "packaging" / f"{APP_SLUG}.svg").read_bytes()
+    icon = (ROOT / "packaging" / f"{APP_SLUG}.png").read_bytes()
     binary = PYINSTALLER_BINARY.read_bytes()
     readme = (ROOT / "DESCRIPTION_AND_INSTRUCTIONS.txt").read_bytes()
     wrapper = f'#!/usr/bin/env sh\nexec "/opt/{APP_SLUG}/{APP_NAME}" "$@"\n'.encode("utf-8")
@@ -127,7 +127,7 @@ def make_deb(version: str) -> Path:
             f"./opt/{APP_SLUG}/DESCRIPTION_AND_INSTRUCTIONS.txt": (readme, 0o644),
             f"./usr/bin/{APP_SLUG}": (wrapper, 0o755),
             f"./usr/share/applications/{APP_SLUG}.desktop": (desktop, 0o644),
-            f"./usr/share/icons/hicolor/scalable/apps/{APP_SLUG}.svg": (icon, 0o644),
+            f"./usr/share/icons/hicolor/512x512/apps/{APP_SLUG}.png": (icon, 0o644),
             f"./usr/share/doc/{APP_SLUG}/copyright": (copyright_text, 0o644),
         }
     )
@@ -149,7 +149,7 @@ def make_appdir() -> None:
         shutil.rmtree(APPDIR)
     (APPDIR / "usr" / "bin").mkdir(parents=True)
     (APPDIR / "usr" / "share" / "applications").mkdir(parents=True)
-    (APPDIR / "usr" / "share" / "icons" / "hicolor" / "scalable" / "apps").mkdir(parents=True)
+    (APPDIR / "usr" / "share" / "icons" / "hicolor" / "512x512" / "apps").mkdir(parents=True)
 
     shutil.copy2(PYINSTALLER_BINARY, APPDIR / "usr" / "bin" / APP_SLUG)
     os.chmod(APPDIR / "usr" / "bin" / APP_SLUG, 0o755)
@@ -162,11 +162,11 @@ def make_appdir() -> None:
     os.chmod(app_run, 0o755)
 
     desktop_src = ROOT / "packaging" / f"{APP_SLUG}.desktop"
-    icon_src = ROOT / "packaging" / f"{APP_SLUG}.svg"
+    icon_src = ROOT / "packaging" / f"{APP_SLUG}.png"
     shutil.copy2(desktop_src, APPDIR / f"{APP_SLUG}.desktop")
     shutil.copy2(desktop_src, APPDIR / "usr" / "share" / "applications" / f"{APP_SLUG}.desktop")
-    shutil.copy2(icon_src, APPDIR / f"{APP_SLUG}.svg")
-    shutil.copy2(icon_src, APPDIR / "usr" / "share" / "icons" / "hicolor" / "scalable" / "apps" / f"{APP_SLUG}.svg")
+    shutil.copy2(icon_src, APPDIR / f"{APP_SLUG}.png")
+    shutil.copy2(icon_src, APPDIR / "usr" / "share" / "icons" / "hicolor" / "512x512" / "apps" / f"{APP_SLUG}.png")
 
 
 def find_appimagetool() -> Path | None:
