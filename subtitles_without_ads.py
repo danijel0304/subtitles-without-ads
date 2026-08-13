@@ -18,7 +18,7 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 
 from self_updater import SelfUpdater
 
-APP_VERSION = '1.1.9'
+APP_VERSION = '1.2.0'
 GITHUB_REPO = "danijel0304/subtitles-without-ads"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
@@ -150,7 +150,7 @@ class SRTCleanerApp:
         self.root = root
         self._main_thread = threading.current_thread()
         self._ui_queue = queue.Queue()
-        self.language = 'hr'  # Default language
+        self.language = 'en'  # Default language
         self.dark_mode = False
         self.update_check_running = False
         self.root.title(f"Subtitles Without Ads - Verzija {APP_VERSION}")
