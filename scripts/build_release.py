@@ -144,6 +144,44 @@ def make_deb(version: str) -> Path:
     return output
 
 
+def make_rpm(version: str) -> Path:
+    rpm_version = version.replace("-", ".")
+    topdir = BUILD_DIR / "rpmbuild"
+    spec_dir = topdir / "SPECS"
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    spec = spec_dir / f"{APP_SLUG}.spec"
+    spec.write_text(
+        f"""Name: {APP_SLUG}
+Version: {rpm_version}
+Release: 1%{{?dist}}
+Summary: Clean SRT subtitles from ads and promotional text
+License: MIT
+BuildArch: x86_64
+
+%description
+Small desktop GUI tool for cleaning subtitle files.
+
+%install
+install -Dm755 {PYINSTALLER_BINARY} %{{buildroot}}%{{_bindir}}/{APP_SLUG}
+install -Dm644 {ROOT / 'packaging' / f'{APP_SLUG}.desktop'} %{{buildroot}}%{{_datadir}}/applications/{APP_SLUG}.desktop
+install -Dm644 {ROOT / 'packaging' / f'{APP_SLUG}.png'} %{{buildroot}}%{{_datadir}}/icons/hicolor/512x512/apps/{APP_SLUG}.png
+
+%files
+%{{_bindir}}/{APP_SLUG}
+%{{_datadir}}/applications/{APP_SLUG}.desktop
+%{{_datadir}}/icons/hicolor/512x512/apps/{APP_SLUG}.png
+""",
+        encoding="utf-8",
+    )
+    run(["rpmbuild", "-bb", "--define", f"_topdir {topdir}", str(spec)])
+    matches = list((topdir / "RPMS" / "x86_64").glob("*.rpm"))
+    if len(matches) != 1:
+        raise RuntimeError("RPM build did not produce exactly one package")
+    output = RELEASE_DIR / f"{APP_SLUG}-{rpm_version}-x86_64.rpm"
+    shutil.copy2(matches[0], output)
+    return output
+
+
 def make_appdir() -> None:
     if APPDIR.exists():
         shutil.rmtree(APPDIR)
@@ -216,6 +254,7 @@ def main() -> None:
     artifacts = [
         make_linux_tar(version),
         make_deb(version),
+        make_rpm(version),
     ]
     appimage = make_appimage(version)
     if appimage:
